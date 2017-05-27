@@ -1,0 +1,22 @@
+{
+  "name": "select-panel",
+  "description": "",
+  "main": "index.js",
+  "authors": [
+    "wangchengkai <princewck@gmail.com>"
+  ],
+  "license": "ISC",
+  "homepage": "",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "src/public",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "angular": "^1.6.4",
+    "angular-animate": "^1.6.4"
+  }
+}
