@@ -1,0 +1,61 @@
+html,body {
+    height: 100%;
+}
+
+.app-wrapper {
+    height: 100%;
+    width: 100%;
+
+    .app-container {
+        display: flex;
+        flex-direction: column;
+
+        .app-head {
+            background: #159957;
+            background-image: linear-gradient(120deg, #155799, #159957);
+            font: SimHei;
+            height: 300px;
+            padding: 45px 15px;
+            text-align: center;
+            width: 100%;
+            color: #fff;
+
+            h1 {
+                font-size: 4em;
+                font-weight: bold;
+                color: rgba(255, 255, 255, .8);
+            }
+
+            h4 {
+                font-size: 1.5em;
+                margin-top: 30px;
+                color: rgba(255, 255, 255, .6);
+            }
+
+            div {
+                display: inline-block;
+                height: 4em;
+                line-height: 100%;
+                margin-top: 30px;
+                width: 100%;
+
+                button {
+                    background: transparent;
+                    border: 1px solid #fff;
+                    color: #fff;
+                    font-size: 1.4em;
+                    height: 2em;
+                    line-height: 100%;
+                    opacity: .6;
+                    transition: all .3s ease;
+                    padding: 10px 15px;
+                    cursor: pointer;
+
+                    &:hover {
+                        opacity: .9;
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
@@ -7,8 +8,21 @@
     <title>选择面板</title>
     <link rel="stylesheet" href="./style.css">
 </head>
+
 <body>
-    <div ui-view></div>
+    <div class="app-wrapper">
+        <div class="app-container">
+            <div class="app-head">
+                <h1>multi select panel</h1>
+                <h4>ng1多选组建</h4>
+                <div> 
+                    <button>View on Github</button> 
+                    <button>使用方法</button>
+                </div>
+            </div>
+            <section ui-view></section>
+        </div>
+    </div>
     <script src="./asserts/angular/angular.min.js"></script>
     <script src="./asserts/angular-ui-router/release/angular-ui-router.min.js"></script>
     <script src="./asserts/angular-animate/angular-animate.min.js"></script>
@@ -17,4 +31,5 @@
         angular.bootstrap(document, ['app']);
     </script>
 </body>
+
 </html>
