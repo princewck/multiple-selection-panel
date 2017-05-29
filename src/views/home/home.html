@@ -1,3 +1,14 @@
 <div class="page-home">
-    
+    <div style="width:500px;float:left;">
+        <select-panel 
+            ng-model="selectItems"
+            pick-items-from="categories"
+            array-keys="subGroups=>tags"
+            cascade = "true"
+             />
+    </div>
+    <div style="width:500px;float:left;">
+        {{ selectItems | json}}
+    </div>
+
 </div>

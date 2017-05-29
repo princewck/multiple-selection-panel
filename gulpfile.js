@@ -47,7 +47,7 @@ gulp.task('scripts', ['templates'], function () {
         './src/scripts/templates/**.js',
         './src/scripts/app/**.js',
         './src/services/**.js',
-        './src/directives/**.js',
+        './src/directives/**/**.js',
         './src/views/**/controller.js',
     ])
         .pipe(babel({
@@ -65,6 +65,12 @@ gulp.task('html', function () {
 
 gulp.task('clean', function () {
     return del(['./dist']);
+});
+
+//测试用的json数据
+gulp.task('testData', function() {
+    gulp.src('./src/views/**/**.json')
+        .pipe(gulp.dest('./dist/api'));
 });
 
 gulp.task('asserts', function() {
@@ -85,16 +91,16 @@ gulp.task('open', function() {
 });
 
 
-gulp.task('default', runSequence('clean', ['styles', 'scripts', 'html', 'asserts']));
-gulp.task('dev', runSequence('clean', ['styles', 'scripts', 'html','asserts'], 'connect', 'open'));
+gulp.task('default', runSequence('clean', ['styles', 'scripts', 'html', 'asserts', 'testData']));
+gulp.task('dev', runSequence('clean', ['styles', 'scripts', 'html','asserts', 'testData'], 'connect', 'open'));
 gulp.task('build', ['default']);
 gulp.task('watch', ['dev'], function() {
-    var watchStyles = gulp.watch(['./src/styles/**.css', './src/styles/scss/**.scss'], ['styles']);
+    var watchStyles = gulp.watch(['./src/styles/**.css', './src/styles/scss/*.scss'], ['styles']);
     watchStyles.on('change', function(event) {
         console.log(event.path + ' was ' + event.type, 'handling...');
     });
     var watchScriptsAndTemplates = gulp.watch([
-        './src/directives/**/**',
+        './src/directives/**/**.*',
         './src/views/**/**',
         './src/scripts/**.js',
         './src/scripts/app/**.js'
@@ -106,4 +112,6 @@ gulp.task('watch', ['dev'], function() {
     watchIndexHtml.on('change', function(event) {
         console.log(event.path + ' was ' + event.type, 'handling...');
     });
+
+    var watchData = gulp.watch('./src/views/**/*.json', ['testData']);
 });
