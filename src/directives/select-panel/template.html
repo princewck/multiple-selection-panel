@@ -1,33 +1,42 @@
 <div class="select-panel-wrapper">
     <div class="select-panel">
-        <p class="select-panel-type">
-            内容标签：<a>直接选择</a> <span class="divider"></span><a class="mute">级联选择</a>
+        <p class="select-panel-type" ng-click="noHide($event)">
+            内容标签：
+            <a ng-click="toggleMode(false)" ng-class="{mute: cascade == false}">直接选择</a> 
+            <span class="divider"></span>
+            <a ng-click="toggleMode(true)" ng-class="{mute: cascade == true}">级联选择</a>
         </p>
-        <div class="select-panel-input">
+        <div class="select-panel-input" ng-click="togglePanelVisiblity($event)">
             <span class="select-panel-selected-items">
-                <span>选择标签 <span class="del-item">&times;</span></span>
-            <span>选择标签 <span class="del-item">&times;</span></span>
-            <span>选择标签 <span class="del-item">&times;</span></span>
+                <span ng-repeat="tag in getCheckedItems() track by $index">
+                    {{ tag[nameKeys[nameKeys.length-1]] }}
+                    <span class="del-item" ng-click="uncheck(tag, $event)">&times;</span>
+                </span>
+                <span class="placeholder" ng-hide="getCheckedItems().length">
+                    选择标签
+                </span>
             </span>
             <div class="arrow-right-wrapper">
-                <span class="arrow-right"></span>
+                <span class="arrow-right" ng-hide="staticMode()" ng-class="{active: !searchPanelVisible}"></span>
             </div>
         </div>
-        <div class="select-panel-selector">
+        <div class="select-panel-selector" ng-style="panelPositionStyle()" ng-show="searchPanelVisible" ng-click="noHide($event)">
             <div class="select-panel-search">
-                <input type="text" placeholder="搜索" />
+                <input type="text" ng-model="_searchQuery" placeholder="搜索" />
+                <span ng-show="_searchQuery" ng-click="_searchQuery=''" class="reset-query">&times;</span>
             </div>
 
             <div class="select-panel-list-wrapper">
                 <ul class="select-panel-list" ng-repeat="column in getColumns() track by $index" ng-init="_outerIndex=$index" ng-style="{width: 100/(getColumns().length || 1) + '%'}">
-                    <li ng-repeat="item in column" 
+                    <li ng-repeat="item in column track by $index" 
                         class="select-panel-list-item" 
                         ng-class="{active: (getSelectedIndex(_outerIndex) == $index)&&(_outerIndex != getColumns().length - 1)}"
                         ng-click="clickItem(_outerIndex, $index)"
+                        ng-show="rowVisible(item, _outerIndex, $index)"
                         >
                         <input ng-model="item.checked" ng-if="_outerIndex == getColumns().length - 1" id="{{ 'item_' + _outerIndex + '_' + $index }}" type="checkbox" />
-                        <label ng-if="_outerIndex == getColumns().length - 1" for="{{ 'item_' + _outerIndex + '_' + $index }}">{{ item[nameKeys[_outerIndex]] }}</label>
-                        <label ng-if="_outerIndex != getColumns().length - 1" >{{ item[nameKeys[_outerIndex]] }}</label>
+                        <label ng-if="_outerIndex == getColumns().length - 1" for="{{ 'item_' + _outerIndex + '_' + $index }}">{{ cascade ? item[nameKeys[_outerIndex]] : item[nameKeys[nameKeys.length - 1]] }}</label>
+                        <label ng-if="_outerIndex != getColumns().length - 1" >{{ cascade ? item[nameKeys[_outerIndex]] : item[nameKeys[nameKeys.length - 1]] }} </label>
                     </li>
                 </ul>
             </div>

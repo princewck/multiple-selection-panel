@@ -7,6 +7,33 @@ app.directive('selectPanel', ['$parse', ($parse) => ({
         let cascadeAsDefault = attrs.cascade == 'true' ? true : false;
         scope.cascade = cascadeAsDefault || false;
 
+        scope.searchPanelVisible = attrs.hasOwnProperty('static') || false;
+        scope.togglePanelVisiblity = function (event) {
+            event.stopPropagation();
+            if (attrs.hasOwnProperty('static')) return;
+            scope.searchPanelVisible = !scope.searchPanelVisible;
+        }
+        const handler = (event) => {
+            console.log(scope.searchPanelVisible);
+            event.stopPropagation();
+            scope.searchPanelVisible && (scope.$apply(scope.searchPanelVisible = false));
+        };
+        scope.noHide = (event) => {
+            event.stopPropagation();
+        }
+
+        scope.staticMode = () => {
+            return attrs.hasOwnProperty('static');
+        }
+
+        //静态显示模式(只显示结果input)，亦或是absolute模式(点击才显示)选择框
+        if (!attrs.hasOwnProperty('static')) {
+            document.addEventListener('click', handler);
+            scope.$on('$destory', function () {
+                document.removeEventListener('click', handler);
+            });
+        }
+
         //按数组顺序查找每一级
         let arrayKeys = angular.isString(scope.arrayKeys) ? scope.arrayKeys.trim().split('=>') : [];
         let treeLength = arrayKeys.length + 1;//多少列,树的深度+1
@@ -37,35 +64,119 @@ app.directive('selectPanel', ['$parse', ($parse) => ({
             }
             return list;
         }
+
+        scope.flatItems = [];
         scope.$watch('data', (newVal, oldVal) => {
             //确保数据副本为最新
             data = angular.copy(newVal);
+            scope.flatItems = flat(data);
         });
 
         //输出扁平化数据，最后一级:标签列表
-        const flatItems = (data) => {
-            let item = {};
-            let list = data;
-            for (let i = 0; i < treeLength; i++) {
-                //递归，输出扁平化数据
+        const flat = (data) => {
+            let tempdata = data;
+            for (let i = 0; i < treeLength - 1; i++) {
+                let arr = [];
+                tempdata.forEach((d, index) => {
+                    d['tree'] = d['tree'] || [];
+                    d['tree'].push('' + i + ',' + index);
+                    d['tree'] = [...new Set(d['tree'])];
+                    var subItems = d[arrayKeys[i]] || [];
+                    subItems.forEach(item => {
+                        item['tree'] = d.tree || [];
+                        item['tree'].push('' + i + ',' + index);
+                        item['tree'] = [...new Set(item['tree'])];
+                    });
+                    arr.push.apply(arr, subItems);
+                });
+                tempdata = arr;
             }
-            return list;
+            return tempdata;
         }
 
-        function reduceGroups(items, key) {
-            scope.nameKeys
+        // scope.visibleColumnRowMatches = [];
+        scope.$watch('_searchQuery', function (newVal, oldVal) {
+            let visibleColumnRowMatches = new Set();
+            if (newVal) {
+                let pattern = new RegExp('(.)*' + String(newVal).trim().split('').join('(.)*') + '(.)*', 'ig');
+                scope.flatItems.forEach(item => {
+                    item._match = false;
+                    var canItemMatch = pattern.test(item[scope.nameKeys[scope.nameKeys.length - 1]]);
+                    if (canItemMatch) {
+                        // item = angular.copy(item);
+                        item._match = true;
+                        let tree = item.tree || [];
+                        tree.forEach(columnInfo => {
+                            visibleColumnRowMatches.add(columnInfo);
+                        });
+                    } else {
+                        item._match = false;
+                    }
+                });
+            }
+            scope.visibleColumnRowMatches = [...visibleColumnRowMatches];
+        });
+
+        //过滤可见性
+        scope.rowVisible = (item, columnIndex, rowIndex) => {
+            if (!scope._searchQuery) return true;
+            if (item.hasOwnProperty('_match')) return item._match;
+            item.tree = item.tree || [];
+            var aimMatch = scope.visibleColumnRowMatches.filter(m => {
+                return m.indexOf(columnIndex + '') == 0;
+            });
+            return aimMatch.some(m => {
+                return item.tree.some(_m => {
+                    scope.clickItem(columnIndex, rowIndex);
+                    scope.selectedItems[columnIndex] = rowIndex;
+                    return m == _m;
+                });
+            });
         }
 
+        scope.toggleMode = (isCascade) => {
+            scope.selectedItems = {};
+            scope.cascade = Boolean(isCascade);
+        }
+
+        //取消已经勾选的Tag
+        scope.uncheck = function (item, event) {
+            event.stopPropagation();
+            delete item.checked;
+        }
+
+        //获取所有列的数据
         scope.getColumns = (function () {
             var columns = [];
+            var lastCascade = scope.cascade;
+            var lastData = [];
+            var lastSelectedItems = [];
             return function () {
+                if (lastCascade == scope.cascade
+                    && lastData == scope.flatItems
+                    && lastSelectedItems == scope.selectedItems) {
+                    return columns;
+                }
+                lastCascade = scope.cascade;
+                lastData = scope.flatItems;
+                lastSelectedItems = scope.selectedItems;
                 columns.splice(0, columns.length);
+                if (!scope.cascade) {
+                    //‘直接选择’模式，直接输出最后一级扁平化数据
+                    columns.push(scope.flatItems)
+                    return columns;
+                }
                 for (let i = 0; i < treeLength; i++) {
                     columns.push(getItems(i));
                 }
                 return columns;
             }
         }());
+
+        scope.$on('$destory', function () {
+            //gc manually
+            columns = lastCascade = lastData = lastSelectedItems = null;
+        });
 
         //获取某一列中选中项index
         scope.getSelectedIndex = (columnIndex) => {
@@ -75,9 +186,12 @@ app.directive('selectPanel', ['$parse', ($parse) => ({
                 return 0;
         }
 
+        //点击列表项，切换联动显示
         scope.clickItem = (columnIndex, rowIndex) => {
             if (scope.selectedItems[columnIndex] == rowIndex) return;
-            scope.selectedItems[columnIndex] = Number(rowIndex);
+            let o = {};
+            o[columnIndex] = Number(rowIndex);
+            scope.selectedItems = Object.assign({}, scope.selectedItems, o);
             Object.keys(scope.selectedItems).forEach(key => {
                 if (key > columnIndex) {
                     delete scope.selectedItems[key];
@@ -85,11 +199,67 @@ app.directive('selectPanel', ['$parse', ($parse) => ({
             });
         }
 
-        ngModelCtrl.$formatters.push(modelValue => {
-            if (typeof modelValue == 'undefined')
-                return [];
-            return modelValue;
+        scope.getCheckedItems = function () {
+            if (!angular.isArray(scope.flatItems)) return _emptyItems;
+            return scope.flatItems.filter(item => item.checked);
+        }
+
+        // syncModel();
+        function syncModel() {
+            let val = scope.getCheckedItems();
+            ngModelCtrl.$setViewValue(val);
+        }
+
+        // ngModelCtrl.$formatters.push(function (newVal) {
+        //     console.log('formatters', newVal);
+        //     return newVal;
+        // });
+
+        // ngModelCtrl.$parsers.push(function (newVal) {
+        //     console.log('parsers', newVal);
+        //     return newVal;
+        // });
+
+        scope.getCheckedItemIds = function () {
+            //这里限制了，必须有id字段，否则会出错
+            return scope.getCheckedItems().map(item => item.id).join(',');
+        }
+
+        scope.getModelValue = function () {
+            return $parse(attrs.ngModel)(scope.$parent);
+        }
+
+        scope.$watch('getModelValue()', function (newVal, oldVal) {
+            console.log('model changed');
+            //以model为准更新view
+            console.log(newVal, oldVal);
+
+        }, true);
+
+        syncModel();
+        scope.$watch('getCheckedItemIds()', function (newVal, oldVal) {
+            syncModel();
         });
+
+        /**
+         * 样式控制
+         */
+        scope.panelPositionStyle = function () {
+            let isStatic = attrs.hasOwnProperty('static');
+            let columnCount = scope.nameKeys.length;
+            let absolutewidth = columnCount * 180;
+            if (isStatic) {
+                return {
+                    position: 'static',
+                    width: '100%'
+                }
+            }
+            return {
+                position: 'absolute',
+                width: scope.cascade ? absolutewidth + 'px' : '300px',
+                zIndex: 1000
+            };
+        }
     },
     scope: {
         data: '=pickItemsFrom',

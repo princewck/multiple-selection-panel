@@ -54,7 +54,7 @@ $borderColor: #d5d5d5;
 
                 span {
                     background: #eaf4fd;
-                    border: 1px solid #ddefff;
+                    border: none;
                     border-radius: 3px;
                     color: #8cabe1;
                     display: inline-block;
@@ -62,6 +62,8 @@ $borderColor: #d5d5d5;
                     line-height: 25px;
                     height: 25px;
                     padding: 0 5px;
+                    margin: 0 5px 5px 0;
+                    user-select: none;
 
                     .del-item {
                         padding: 0;
@@ -70,12 +72,20 @@ $borderColor: #d5d5d5;
                         cursor: pointer;
                         display: inline-block;
                         transition: all .2s ease;
+                        user-select: none;
 
                         &:hover {
                             color: red;
                             transform: scale(1.2);
                         }
                     }
+                }
+
+                .placeholder {
+                    background: #fff;
+                    background: transparent;
+                    border: none;
+                    color: gray;
                 }
             }
 
@@ -127,6 +137,7 @@ $borderColor: #d5d5d5;
                 line-height: 35px;
                 width: 100%;
                 padding: 5px;
+                position: relative;
                 
                 input {
                     border: none;
@@ -144,12 +155,21 @@ $borderColor: #d5d5d5;
                     &::-webkit-input-placeholder {  color: $placeholderColor }
                     &::-ms-input-placeholder {  color: $placeholderColor }
                 }
+                .reset-query {
+                    position: absolute;
+                    right: 10px;
+                    top:0;
+                    cursor: pointer;
+
+                    &:hover {
+                        font-weight: bold;
+                    }
+                }
             }
 
             .select-panel-list-wrapper {
                 width: 100%;
                 height: auto;
-                height: 200px;
                 margin-top: 10px;
                 overflow: auto;
 
@@ -158,6 +178,8 @@ $borderColor: #d5d5d5;
                     box-sizing: border-box;
                     display: block;
                     float: left;
+                    height: 200px;
+                    overflow: auto;
                     padding: 0;
                     width: 33.333%;
 
