@@ -1,4 +1,4 @@
-app.directive('selectPanel', ['$parse', ($parse) => ({
+app.directive('selectPanel', ['$parse', '$timeout', ($parse, $timeout) => ({
     restrict: 'E',
     require: 'ngModel',
     templateUrl: 'select-panel/template.html',
@@ -35,7 +35,7 @@ app.directive('selectPanel', ['$parse', ($parse) => ({
         }
 
         //按数组顺序查找每一级
-        let arrayKeys = angular.isString(scope.arrayKeys) ? scope.arrayKeys.trim().split('=>') : [];
+        let arrayKeys = angular.isString(attrs.arrayKeys) ? attrs.arrayKeys.trim().split('=>') : [];
         let treeLength = arrayKeys.length + 1;//多少列,树的深度+1
 
         //每一级显示名映射的字段名,默认全部为name
@@ -94,7 +94,7 @@ app.directive('selectPanel', ['$parse', ($parse) => ({
             return tempdata;
         }
 
-        // scope.visibleColumnRowMatches = [];
+        scope.visibleColumnRowMatches = [];
         scope.$watch('_searchQuery', function (newVal, oldVal) {
             let visibleColumnRowMatches = new Set();
             if (newVal) {
@@ -125,10 +125,11 @@ app.directive('selectPanel', ['$parse', ($parse) => ({
             var aimMatch = scope.visibleColumnRowMatches.filter(m => {
                 return m.indexOf(columnIndex + '') == 0;
             });
+            console.log(columnIndex, aimMatch, item.tree);
             return aimMatch.some(m => {
                 return item.tree.some(_m => {
                     scope.clickItem(columnIndex, rowIndex);
-                    scope.selectedItems[columnIndex] = rowIndex;
+                    // scope.selectedItems[columnIndex] = rowIndex;
                     return m == _m;
                 });
             });
@@ -199,47 +200,41 @@ app.directive('selectPanel', ['$parse', ($parse) => ({
             });
         }
 
-        scope.getCheckedItems = function () {
-            if (!angular.isArray(scope.flatItems)) return _emptyItems;
-            return scope.flatItems.filter(item => item.checked);
-        }
-
-        // syncModel();
-        function syncModel() {
-            let val = scope.getCheckedItems();
-            ngModelCtrl.$setViewValue(val);
-        }
-
-        // ngModelCtrl.$formatters.push(function (newVal) {
-        //     console.log('formatters', newVal);
-        //     return newVal;
-        // });
-
-        // ngModelCtrl.$parsers.push(function (newVal) {
-        //     console.log('parsers', newVal);
-        //     return newVal;
-        // });
+        scope.getCheckedItems = (function () {
+            let _emptyItems = [];
+            let checkedItems = [];
+            return function () {
+                if (!angular.isArray(scope.flatItems)) return _emptyItems;
+                checkedItems.splice(0, checkedItems.length);
+                var arr = scope.flatItems.filter(item => item.checked);
+                return checkedItems.push.apply(checkedItems, arr), checkedItems;
+            }
+        }());
 
         scope.getCheckedItemIds = function () {
             //这里限制了，必须有id字段，否则会出错
             return scope.getCheckedItems().map(item => item.id).join(',');
         }
 
-        scope.getModelValue = function () {
-            return $parse(attrs.ngModel)(scope.$parent);
+        scope.getModelValues = function () {
+            var model = $parse(attrs.ngModel)(scope.$parent);
+            return model.map(v => v[attrs.trackBy]).join(',');
         }
 
-        scope.$watch('getModelValue()', function (newVal, oldVal) {
-            console.log('model changed');
-            //以model为准更新view
-            console.log(newVal, oldVal);
-
+        scope.$watchGroup(['getModelValues()', 'flatItems'], function (newVal, oldVal) {
+            var model = $parse(attrs.ngModel)(scope.$parent);
+            var ids = model.map(item => item[attrs.trackBy]);
+            scope.flatItems.forEach(item => {
+                if (ids.indexOf(item[attrs.trackBy]) >= 0) {
+                    item.checked = true;
+                } else {
+                    item.checked = false;
+                }
+            });
+            if (scope.flatItems.length) {
+                 ngModelCtrl.$setViewValue(scope.getCheckedItems());
+            }
         }, true);
-
-        syncModel();
-        scope.$watch('getCheckedItemIds()', function (newVal, oldVal) {
-            syncModel();
-        });
 
         /**
          * 样式控制
@@ -263,6 +258,6 @@ app.directive('selectPanel', ['$parse', ($parse) => ({
     },
     scope: {
         data: '=pickItemsFrom',
-        arrayKeys: '@',//每一级的子节点数组字段名,从第二级开始制定，因为data[arrayKeys[0]]已经是默认第一级数组了
+        // arrayKeys: '@',//每一级的子节点数组字段名,从第二级开始制定，因为data[arrayKeys[0]]已经是默认第一级数组了
     }
 })]);

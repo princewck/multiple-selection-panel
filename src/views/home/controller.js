@@ -11,7 +11,8 @@ let homeController = ($scope, $http) => {
         });
 
     $scope.delete = function(index) {
-        $scope.selectItems.splice(index, 1);
+        $scope.selectItems = $scope.selectItems.slice(0, index)
+            .concat($scope.selectItems.slice(index+1, $scope.selectItems.length));
     }
 
 };
