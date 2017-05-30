@@ -7,9 +7,10 @@
             cascade = "true"
             track-by = "id"
             limit="2"
+            static
              />
     </div>
-    <div style="width:500px;float:left;">
+    <div style="width:500px;float:left;padding:40px;">
         <ul>
             <li ng-repeat="item in selectItems">{{ item.name }} <button ng-click="delete($index)">删除</button></li>
         </ul>

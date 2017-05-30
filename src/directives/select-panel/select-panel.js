@@ -1,4 +1,4 @@
-app.directive('selectPanel', ['$parse', '$timeout', ($parse, $timeout) => ({
+angular.module('ck.directives', []).directive('selectPanel', ['$parse', '$timeout', ($parse, $timeout) => ({
     restrict: 'E',
     require: 'ngModel',
     templateUrl: 'select-panel/template.html',
@@ -14,7 +14,6 @@ app.directive('selectPanel', ['$parse', '$timeout', ($parse, $timeout) => ({
             scope.searchPanelVisible = !scope.searchPanelVisible;
         }
         const handler = (event) => {
-            console.log(scope.searchPanelVisible);
             event.stopPropagation();
             scope.searchPanelVisible && (scope.$apply(scope.searchPanelVisible = false));
         };
@@ -98,10 +97,10 @@ app.directive('selectPanel', ['$parse', '$timeout', ($parse, $timeout) => ({
         scope.$watch('_searchQuery', function (newVal, oldVal) {
             let visibleColumnRowMatches = new Set();
             if (newVal) {
-                let pattern = new RegExp('(.)*' + String(newVal).trim().split('').join('(.)*') + '(.)*', 'ig');
                 scope.flatItems.forEach(item => {
                     item._match = false;
-                    var canItemMatch = pattern.test(item[scope.nameKeys[scope.nameKeys.length - 1]]);
+                    let pattern = new RegExp(String(newVal).trim().split('').join('(.)*'), 'ig');
+                    let canItemMatch = pattern.test(item[scope.nameKeys[scope.nameKeys.length - 1]]);
                     if (canItemMatch) {
                         // item = angular.copy(item);
                         item._match = true;
@@ -115,6 +114,24 @@ app.directive('selectPanel', ['$parse', '$timeout', ($parse, $timeout) => ({
                 });
             }
             scope.visibleColumnRowMatches = [...visibleColumnRowMatches];
+            $timeout(() => {
+                //here is a trick,expand lists to the first valid item
+                var e = document.createEvent("MouseEvents");
+                e.initMouseEvent("click");
+                let uls = document.getElementsByClassName('select-panel-list-wrapper')[0]
+                    .getElementsByClassName('select-panel-list');
+                    Array.prototype.forEach.call(uls, (ul, index) => {
+                        setTimeout(() => {
+                            let lis = ul.getElementsByTagName('li');
+                            Array.prototype.some.call(lis, (li, index) => {
+                                if (li.className.indexOf('ng-hide') < 0) {
+                                    li.dispatchEvent(e);
+                                    return true;
+                                }
+                            });
+                        }, index * 80);
+                    });
+            }, 100);
         });
 
         //过滤可见性
@@ -122,17 +139,15 @@ app.directive('selectPanel', ['$parse', '$timeout', ($parse, $timeout) => ({
             if (!scope._searchQuery) return true;
             if (item.hasOwnProperty('_match')) return item._match;
             item.tree = item.tree || [];
-            var aimMatch = scope.visibleColumnRowMatches.filter(m => {
+            let aimMatch = scope.visibleColumnRowMatches.filter(m => {
                 return m.indexOf(columnIndex + '') == 0;
             });
-            console.log(columnIndex, aimMatch, item.tree);
-            return aimMatch.some(m => {
+            let visible = aimMatch.some(m => {
                 return item.tree.some(_m => {
-                    scope.clickItem(columnIndex, rowIndex);
-                    // scope.selectedItems[columnIndex] = rowIndex;
                     return m == _m;
                 });
             });
+            return visible;
         }
 
         scope.toggleMode = (isCascade) => {
@@ -211,17 +226,13 @@ app.directive('selectPanel', ['$parse', '$timeout', ($parse, $timeout) => ({
             }
         }());
 
-        scope.getCheckedItemIds = function () {
-            //这里限制了，必须有id字段，否则会出错
-            return scope.getCheckedItems().map(item => item.id).join(',');
-        }
-
         scope.getModelValues = function () {
             var model = $parse(attrs.ngModel)(scope.$parent);
             return model.map(v => v[attrs.trackBy]).join(',');
         }
 
-        scope.$watchGroup(['getModelValues()', 'flatItems'], function (newVal, oldVal) {
+
+        let watcher = function (newVal, oldVal) {
             var model = $parse(attrs.ngModel)(scope.$parent);
             var ids = model.map(item => item[attrs.trackBy]);
             scope.flatItems.forEach(item => {
@@ -232,9 +243,10 @@ app.directive('selectPanel', ['$parse', '$timeout', ($parse, $timeout) => ({
                 }
             });
             if (scope.flatItems.length) {
-                 ngModelCtrl.$setViewValue(scope.getCheckedItems());
+                ngModelCtrl.$setViewValue(scope.getCheckedItems());
             }
-        }, true);
+        };
+        scope.$watchGroup(['getModelValues()', 'flatItems'], watcher);
 
         /**
          * 样式控制

@@ -11,6 +11,7 @@ let homeController = ($scope, $http) => {
         });
 
     $scope.delete = function(index) {
+        //这里必须用新数组，不能改变原来的数组
         $scope.selectItems = $scope.selectItems.slice(0, index)
             .concat($scope.selectItems.slice(index+1, $scope.selectItems.length));
     }
