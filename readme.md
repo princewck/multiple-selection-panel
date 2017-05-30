@@ -4,7 +4,7 @@
 
 a muti-select panel build with angular1.* directive weigh at a 7kb js and a 15kb css files.
 
-demo: princewck.github.io/select-panel
+[demo]: princewck.github.io/select-panel
 
 
 
