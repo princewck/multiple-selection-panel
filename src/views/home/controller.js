@@ -2,7 +2,7 @@ let homeController = ($scope, $http) => {
     const vm = this;
     $scope.categories = [];
     loadApi('./api/home/tagCategories.json', 'categories');
-    $scope.selectItems = [{ id: 1 }, { id: 5 }];
+    $scope.selectItems = [{id: 154}, {id: 155}, { id: 1312 }, { id: 1311 }];
 
     $scope.tags = [];
     loadApi('./api/home/tags.json', 'tags');
