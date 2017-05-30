@@ -1,4 +1,4 @@
-<div class="select-panel-wrapper" ng-cloak>
+<div class="select-panel-wrapper" ng-init="__directiveId = $index" ng-cloak>
     <div class="select-panel">
         <p class="select-panel-type" ng-click="noHide($event)">
             内容标签：
@@ -34,8 +34,8 @@
                         ng-click="clickItem(_outerIndex, $index)"
                         ng-show="rowVisible(item, _outerIndex, $index)"
                         >
-                        <input ng-model="item.checked" ng-if="_outerIndex == getColumns().length - 1" id="{{ 'item_' + _outerIndex + '_' + $index }}" type="checkbox" />
-                        <label ng-if="_outerIndex == getColumns().length - 1" for="{{ 'item_' + _outerIndex + '_' + $index }}">{{ cascade ? item[nameKeys[_outerIndex]] : item[nameKeys[nameKeys.length - 1]] }}</label>
+                        <input ng-model="item.checked" ng-if="_outerIndex == getColumns().length - 1" id="{{ directiveId + '_item_' + _outerIndex + '_' + $index }}" type="checkbox" />
+                        <label ng-if="_outerIndex == getColumns().length - 1" for="{{ directiveId + '_item_' + _outerIndex + '_' + $index }}">{{ cascade ? item[nameKeys[_outerIndex]] : item[nameKeys[nameKeys.length - 1]] }}</label>
                         <label ng-if="_outerIndex != getColumns().length - 1" >{{ cascade ? item[nameKeys[_outerIndex]] : item[nameKeys[nameKeys.length - 1]] }} </label>
                     </li>
                 </ul>

@@ -34,23 +34,30 @@ html,body {
 
             div {
                 display: inline-block;
-                height: 4em;
+                height: 80px;
                 line-height: 100%;
                 margin-top: 30px;
                 width: 100%;
 
-                button {
+                a {
                     background: transparent;
                     border: 1px solid #fff;
                     color: #fff;
-                    font-size: 1.4em;
-                    height: 2em;
+                    display: inline-block;
+                    font-size: 1em;
                     line-height: 100%;
                     opacity: .6;
+                    outline: none;
+                    text-decoration: none;
                     transition: all .3s ease;
                     padding: 10px 15px;
                     cursor: pointer;
 
+
+                    &:visited {
+                        color: #fff;
+                        text-decoration: none;
+                    }
                     &:hover {
                         opacity: .9;
                     }

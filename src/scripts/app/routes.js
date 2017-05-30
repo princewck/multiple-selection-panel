@@ -9,8 +9,6 @@ app.config(['$stateProvider', '$urlRouterProvider', ($stateProvider, $urlRouterP
         })
         .state('readme', {
             url: '/readme',
-            templateUrl: 'readme/readme.html',
-            controller: 'readmeController',
-            controllerAs: 'readme'
+            templateUrl: 'readme/readme.html'
         });
 }]);
