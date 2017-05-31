@@ -164,21 +164,22 @@ angular.module('ck.directives', []).directive('selectPanel', ['$parse', '$timeou
 
         //获取所有列的数据
         scope.getColumns = (function () {
-            var columns = [];
-            var lastCascade = scope.cascade;
-            var lastData = [];
-            var lastSelectedItems = [];
-            return function () {
-                if (lastCascade == scope.cascade
-                    && lastData == scope.flatItems
-                    && lastSelectedItems == scope.selectedItems) {
-                    return columns;
-                }
-                lastCascade = scope.cascade;
-                lastData = scope.flatItems;
-                lastSelectedItems = scope.selectedItems;
+            // var columns = [];
+            // var lastCascade = scope.cascade;
+            // var lastData = [];
+            // var lastSelectedItems = [];
+            return function (cascade) {
+                let columns = [];
+                // if (lastCascade == scope.cascade
+                //     && lastData == scope.flatItems
+                //     && lastSelectedItems == scope.selectedItems) {
+                //     return columns;
+                // }
+                // lastCascade = cascade || scope.cascade;
+                // lastData = scope.flatItems;
+                // lastSelectedItems = scope.selectedItems;
                 columns.splice(0, columns.length);
-                if (!scope.cascade) {
+                if (!cascade) {
                     //‘直接选择’模式，直接输出最后一级扁平化数据
                     columns.push(scope.flatItems)
                     return columns;

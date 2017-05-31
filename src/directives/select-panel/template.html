@@ -27,18 +27,30 @@
             </div>
 
             <div class="select-panel-list-wrapper">
-                <ul class="select-panel-list" ng-repeat="column in getColumns() track by $index" ng-init="_outerIndex=$index" ng-style="{width: 100/(getColumns().length || 1) + '%'}">
+                <ul class="select-panel-list" ng-show="cascade" ng-repeat="column in columns = getColumns(true) track by $index" ng-init="_outerIndex=$index" ng-style="{width: 100/(columns.length || 1) + '%'}">
                     <li ng-repeat="item in column track by $index" 
                         class="select-panel-list-item" 
-                        ng-class="{active: (getSelectedIndex(_outerIndex) == $index)&&(_outerIndex != getColumns().length - 1)}"
+                        ng-class="{active: (getSelectedIndex(_outerIndex) == $index)&&(_outerIndex != columns.length - 1)}"
                         ng-click="clickItem(_outerIndex, $index)"
                         ng-show="rowVisible(item, _outerIndex, $index)"
                         >
-                        <input ng-model="item.checked" ng-if="_outerIndex == getColumns().length - 1" id="{{ directiveId + '_item_' + _outerIndex + '_' + $index }}" type="checkbox" />
-                        <label ng-if="_outerIndex == getColumns().length - 1" for="{{ directiveId + '_item_' + _outerIndex + '_' + $index }}">{{ cascade ? item[nameKeys[_outerIndex]] : item[nameKeys[nameKeys.length - 1]] }}</label>
-                        <label ng-if="_outerIndex != getColumns().length - 1" >{{ cascade ? item[nameKeys[_outerIndex]] : item[nameKeys[nameKeys.length - 1]] }} </label>
+                        <input ng-model="item.checked" ng-if="_outerIndex == columns.length - 1" id="{{ directiveId + '_item_' + _outerIndex + '_' + $index }}" type="checkbox" />
+                        <label ng-if="_outerIndex == columns.length - 1" for="{{ directiveId + '_item_' + _outerIndex + '_' + $index }}">{{ cascade ? item[nameKeys[_outerIndex]] : item[nameKeys[nameKeys.length - 1]] }}</label>
+                        <label ng-if="_outerIndex != columns.length - 1" >{{ cascade ? item[nameKeys[_outerIndex]] : item[nameKeys[nameKeys.length - 1]] }} </label>
                     </li>
                 </ul>
+                <ul class="select-panel-list" ng-hide="cascade" ng-repeat="column in columns2 = getColumns(false) track by $index" ng-init="_outerIndex=$index" ng-style="{width: 100/(columns2.length || 1) + '%'}">
+                    <li ng-repeat="item in column track by $index" 
+                        class="select-panel-list-item" 
+                        ng-class="{active: (getSelectedIndex(_outerIndex) == $index)&&(_outerIndex != columns2.length - 1)}"
+                        ng-click="clickItem(_outerIndex, $index)"
+                        ng-show="rowVisible(item, _outerIndex, $index)"
+                        >
+                        <input ng-model="item.checked" ng-if="_outerIndex == columns2.length - 1" id="{{ directiveId + '_item_' + _outerIndex + '_' + $index }}" type="checkbox" />
+                        <label ng-if="_outerIndex == columns2.length - 1" for="{{ directiveId + '_item_' + _outerIndex + '_' + $index }}">{{ cascade ? item[nameKeys[_outerIndex]] : item[nameKeys[nameKeys.length - 1]] }}</label>
+                        <label ng-if="_outerIndex != columns2.length - 1" >{{ cascade ? item[nameKeys[_outerIndex]] : item[nameKeys[nameKeys.length - 1]] }} </label>
+                    </li>
+                </ul>                
             </div>
         </div>
     </div>
