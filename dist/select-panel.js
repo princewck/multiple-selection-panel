@@ -4,6 +4,7 @@ angular.module('ck.directives', []).directive('selectPanel', ['$parse', '$timeou
     templateUrl: 'select-panel/template.html',
     link: (scope, elements, attrs, ngModelCtrl) => {
         scope.directiveId = scope.$id;
+        scope.wrapperId = 'ck-select-panel'+ scope.$id;
         //初始化显示类型: 级联|直接
         let cascadeAsDefault = attrs.cascade == 'true' ? true : false;
         scope.cascade = cascadeAsDefault || false;
@@ -119,19 +120,23 @@ angular.module('ck.directives', []).directive('selectPanel', ['$parse', '$timeou
                 //here is a trick,expand lists to the first valid item
                 var e = document.createEvent("MouseEvents");
                 e.initMouseEvent("click");
-                let uls = document.getElementsByClassName('select-panel-list-wrapper')[0]
+                let uls = document.getElementById(scope.wrapperId)
+                    .getElementsByClassName('select-panel-list-wrapper')[0]
                     .getElementsByClassName('select-panel-list');
-                    Array.prototype.forEach.call(uls, (ul, index) => {
-                        setTimeout(() => {
-                            let lis = ul.getElementsByTagName('li');
-                            Array.prototype.some.call(lis, (li, index) => {
-                                if (li.className.indexOf('ng-hide') < 0) {
-                                    li.dispatchEvent(e);
-                                    return true;
-                                }
-                            });
-                        }, index * 80);
-                    });
+                uls = Array.prototype.filter.call(uls, (ul)=> {
+                    return ul.className.indexOf('ng-hide') < 0;
+                });
+                Array.prototype.forEach.call(uls, (ul, index) => {
+                    setTimeout(() => {
+                        let lis = ul.getElementsByTagName('li');
+                        Array.prototype.some.call(lis, (li, index) => {
+                            if (li.className.indexOf('ng-hide') < 0) {
+                                li.dispatchEvent(e);
+                                return true;
+                            }
+                        });
+                    }, index * 80);
+                });
             }, 100);
         });
 
@@ -163,33 +168,19 @@ angular.module('ck.directives', []).directive('selectPanel', ['$parse', '$timeou
         }
 
         //获取所有列的数据
-        scope.getColumns = (function () {
-            // var columns = [];
-            // var lastCascade = scope.cascade;
-            // var lastData = [];
-            // var lastSelectedItems = [];
-            return function (cascade) {
-                let columns = [];
-                // if (lastCascade == scope.cascade
-                //     && lastData == scope.flatItems
-                //     && lastSelectedItems == scope.selectedItems) {
-                //     return columns;
-                // }
-                // lastCascade = cascade || scope.cascade;
-                // lastData = scope.flatItems;
-                // lastSelectedItems = scope.selectedItems;
-                columns.splice(0, columns.length);
-                if (!cascade) {
-                    //‘直接选择’模式，直接输出最后一级扁平化数据
-                    columns.push(scope.flatItems)
-                    return columns;
-                }
-                for (let i = 0; i < treeLength; i++) {
-                    columns.push(getItems(i));
-                }
+        scope.getColumns = function (cascade) {
+            let columns = [];
+            columns.splice(0, columns.length);
+            if (!cascade) {
+                //‘直接选择’模式，直接输出最后一级扁平化数据
+                columns.push(scope.flatItems)
                 return columns;
             }
-        }());
+            for (let i = 0; i < treeLength; i++) {
+                columns.push(getItems(i));
+            }
+            return columns;
+        };
 
         scope.$on('$destory', function () {
             //gc manually
@@ -275,4 +266,4 @@ angular.module('ck.directives', []).directive('selectPanel', ['$parse', '$timeou
         // arrayKeys: '@',//每一级的子节点数组字段名,从第二级开始制定，因为data[arrayKeys[0]]已经是默认第一级数组了
     }
 })]);
-angular.module('ck.directives').run(['$templateCache', function($templateCache) {$templateCache.put('select-panel/template.html','<div class="select-panel-wrapper" ng-init="__directiveId = $index" ng-cloak>\n    <div class="select-panel">\n        <p class="select-panel-type" ng-click="noHide($event)">\n            \u5185\u5BB9\u6807\u7B7E\uFF1A\n            <a ng-click="toggleMode(false)" ng-class="{mute: cascade == false}">\u76F4\u63A5\u9009\u62E9</a> \n            <span class="divider"></span>\n            <a ng-click="toggleMode(true)" ng-class="{mute: cascade == true}">\u7EA7\u8054\u9009\u62E9</a>\n        </p>\n        <div class="select-panel-input" ng-click="togglePanelVisiblity($event)">\n            <span class="select-panel-selected-items">\n                <span ng-repeat="tag in getCheckedItems() track by $index">\n                    {{ tag[nameKeys[nameKeys.length-1]] }}\n                    <span class="del-item" ng-click="uncheck(tag, $event)">&times;</span>\n                </span>\n                <span class="placeholder" ng-hide="getCheckedItems().length">\n                    \u9009\u62E9\u6807\u7B7E\n                </span>\n            </span>\n            <div class="arrow-right-wrapper">\n                <span class="arrow-right" ng-hide="staticMode()" ng-class="{active: !searchPanelVisible}"></span>\n            </div>\n        </div>\n        <div class="select-panel-selector" ng-style="panelPositionStyle()" ng-show="searchPanelVisible" ng-click="noHide($event)">\n            <div class="select-panel-search">\n                <input type="text" ng-model="_searchQuery" placeholder="\u641C\u7D22" />\n                <span ng-show="_searchQuery" ng-click="_searchQuery=\'\'" class="reset-query">&times;</span>\n            </div>\n\n            <div class="select-panel-list-wrapper">\n                <ul class="select-panel-list" ng-show="cascade" ng-repeat="column in columns = getColumns(true) track by $index" ng-init="_outerIndex=$index" ng-style="{width: 100/(columns.length || 1) + \'%\'}">\n                    <li ng-repeat="item in column track by $index" \n                        class="select-panel-list-item" \n                        ng-class="{active: (getSelectedIndex(_outerIndex) == $index)&&(_outerIndex != columns.length - 1)}"\n                        ng-click="clickItem(_outerIndex, $index)"\n                        ng-show="rowVisible(item, _outerIndex, $index)"\n                        >\n                        <input ng-model="item.checked" ng-if="_outerIndex == columns.length - 1" id="{{ directiveId + \'_item_\' + _outerIndex + \'_\' + $index }}" type="checkbox" />\n                        <label ng-if="_outerIndex == columns.length - 1" for="{{ directiveId + \'_item_\' + _outerIndex + \'_\' + $index }}">{{ cascade ? item[nameKeys[_outerIndex]] : item[nameKeys[nameKeys.length - 1]] }}</label>\n                        <label ng-if="_outerIndex != columns.length - 1" >{{ cascade ? item[nameKeys[_outerIndex]] : item[nameKeys[nameKeys.length - 1]] }} </label>\n                    </li>\n                </ul>\n                <ul class="select-panel-list" ng-hide="cascade" ng-repeat="column in columns2 = getColumns(false) track by $index" ng-init="_outerIndex=$index" ng-style="{width: 100/(columns2.length || 1) + \'%\'}">\n                    <li ng-repeat="item in column track by $index" \n                        class="select-panel-list-item" \n                        ng-class="{active: (getSelectedIndex(_outerIndex) == $index)&&(_outerIndex != columns2.length - 1)}"\n                        ng-click="clickItem(_outerIndex, $index)"\n                        ng-show="rowVisible(item, _outerIndex, $index)"\n                        >\n                        <input ng-model="item.checked" ng-if="_outerIndex == columns2.length - 1" id="{{ directiveId + \'_item_\' + _outerIndex + \'_\' + $index }}" type="checkbox" />\n                        <label ng-if="_outerIndex == columns2.length - 1" for="{{ directiveId + \'_item_\' + _outerIndex + \'_\' + $index }}">{{ cascade ? item[nameKeys[_outerIndex]] : item[nameKeys[nameKeys.length - 1]] }}</label>\n                        <label ng-if="_outerIndex != columns2.length - 1" >{{ cascade ? item[nameKeys[_outerIndex]] : item[nameKeys[nameKeys.length - 1]] }} </label>\n                    </li>\n                </ul>                \n            </div>\n        </div>\n    </div>\n</div>');}]);
+angular.module('ck.directives').run(['$templateCache', function($templateCache) {$templateCache.put('select-panel/template.html','<div class="select-panel-wrapper" id="{{ wrapperId }}" ng-init="__directiveId = $index" ng-cloak>\n    <div class="select-panel">\n        <p class="select-panel-type" ng-click="noHide($event)">\n            \u5185\u5BB9\u6807\u7B7E\uFF1A\n            <a ng-click="toggleMode(false)" ng-class="{mute: cascade == false}">\u76F4\u63A5\u9009\u62E9</a> \n            <span class="divider"></span>\n            <a ng-click="toggleMode(true)" ng-class="{mute: cascade == true}">\u7EA7\u8054\u9009\u62E9</a>\n        </p>\n        <div class="select-panel-input" ng-click="togglePanelVisiblity($event)">\n            <span class="select-panel-selected-items">\n                <span ng-repeat="tag in getCheckedItems() track by $index">\n                    {{ tag[nameKeys[nameKeys.length-1]] }}\n                    <span class="del-item" ng-click="uncheck(tag, $event)">&times;</span>\n                </span>\n                <span class="placeholder" ng-hide="getCheckedItems().length">\n                    \u9009\u62E9\u6807\u7B7E\n                </span>\n            </span>\n            <div class="arrow-right-wrapper">\n                <span class="arrow-right" ng-hide="staticMode()" ng-class="{active: !searchPanelVisible}"></span>\n            </div>\n        </div>\n        <div class="select-panel-selector" ng-style="panelPositionStyle()" ng-show="searchPanelVisible" ng-click="noHide($event)">\n            <div class="select-panel-search">\n                <input type="text" ng-model="_searchQuery" placeholder="\u641C\u7D22" />\n                <span ng-show="_searchQuery" ng-click="_searchQuery=\'\'" class="reset-query">&times;</span>\n            </div>\n\n            <div class="select-panel-list-wrapper">\n                <ul class="select-panel-list" ng-show="cascade" ng-repeat="column in columns = getColumns(true) track by $index" ng-init="_outerIndex=$index" ng-style="{width: 100/(columns.length || 1) + \'%\'}">\n                    <li ng-repeat="item in column track by $index" \n                        class="select-panel-list-item" \n                        ng-class="{active: (getSelectedIndex(_outerIndex) == $index)&&(_outerIndex != columns.length - 1)}"\n                        ng-click="clickItem(_outerIndex, $index)"\n                        ng-show="rowVisible(item, _outerIndex, $index)"\n                        >\n                        <input ng-model="item.checked" ng-if="_outerIndex == columns.length - 1" id="{{ directiveId + \'_item_\' + _outerIndex + \'_\' + $index }}" type="checkbox" />\n                        <label ng-if="_outerIndex == columns.length - 1" for="{{ directiveId + \'_item_\' + _outerIndex + \'_\' + $index }}">{{ cascade ? item[nameKeys[_outerIndex]] : item[nameKeys[nameKeys.length - 1]] }}</label>\n                        <label ng-if="_outerIndex != columns.length - 1" >{{ cascade ? item[nameKeys[_outerIndex]] : item[nameKeys[nameKeys.length - 1]] }} </label>\n                    </li>\n                </ul>\n                <ul class="select-panel-list" ng-hide="cascade" ng-repeat="column in columns2 = getColumns(false) track by $index" ng-init="_outerIndex=$index" ng-style="{width: 100/(columns2.length || 1) + \'%\'}">\n                    <li ng-repeat="item in column track by $index" \n                        class="select-panel-list-item" \n                        ng-class="{active: (getSelectedIndex(_outerIndex) == $index)&&(_outerIndex != columns2.length - 1)}"\n                        ng-click="clickItem(_outerIndex, $index)"\n                        ng-show="rowVisible(item, _outerIndex, $index)"\n                        >\n                        <input ng-model="item.checked" ng-if="_outerIndex == columns2.length - 1" id="{{ directiveId + \'_item_\' + _outerIndex + \'_\' + $index }}" type="checkbox" />\n                        <label ng-if="_outerIndex == columns2.length - 1" for="{{ directiveId + \'_item_\' + _outerIndex + \'_\' + $index }}">{{ cascade ? item[nameKeys[_outerIndex]] : item[nameKeys[nameKeys.length - 1]] }}</label>\n                        <label ng-if="_outerIndex != columns2.length - 1" >{{ cascade ? item[nameKeys[_outerIndex]] : item[nameKeys[nameKeys.length - 1]] }} </label>\n                    </li>\n                </ul>                \n            </div>\n        </div>\n    </div>\n</div>');}]);

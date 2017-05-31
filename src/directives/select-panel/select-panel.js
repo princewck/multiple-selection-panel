@@ -4,6 +4,7 @@ angular.module('ck.directives', []).directive('selectPanel', ['$parse', '$timeou
     templateUrl: 'select-panel/template.html',
     link: (scope, elements, attrs, ngModelCtrl) => {
         scope.directiveId = scope.$id;
+        scope.wrapperId = 'ck-select-panel'+ scope.$id;
         //初始化显示类型: 级联|直接
         let cascadeAsDefault = attrs.cascade == 'true' ? true : false;
         scope.cascade = cascadeAsDefault || false;
@@ -119,19 +120,23 @@ angular.module('ck.directives', []).directive('selectPanel', ['$parse', '$timeou
                 //here is a trick,expand lists to the first valid item
                 var e = document.createEvent("MouseEvents");
                 e.initMouseEvent("click");
-                let uls = document.getElementsByClassName('select-panel-list-wrapper')[0]
+                let uls = document.getElementById(scope.wrapperId)
+                    .getElementsByClassName('select-panel-list-wrapper')[0]
                     .getElementsByClassName('select-panel-list');
-                    Array.prototype.forEach.call(uls, (ul, index) => {
-                        setTimeout(() => {
-                            let lis = ul.getElementsByTagName('li');
-                            Array.prototype.some.call(lis, (li, index) => {
-                                if (li.className.indexOf('ng-hide') < 0) {
-                                    li.dispatchEvent(e);
-                                    return true;
-                                }
-                            });
-                        }, index * 80);
-                    });
+                uls = Array.prototype.filter.call(uls, (ul)=> {
+                    return ul.className.indexOf('ng-hide') < 0;
+                });
+                Array.prototype.forEach.call(uls, (ul, index) => {
+                    setTimeout(() => {
+                        let lis = ul.getElementsByTagName('li');
+                        Array.prototype.some.call(lis, (li, index) => {
+                            if (li.className.indexOf('ng-hide') < 0) {
+                                li.dispatchEvent(e);
+                                return true;
+                            }
+                        });
+                    }, index * 80);
+                });
             }, 100);
         });
 
@@ -163,33 +168,19 @@ angular.module('ck.directives', []).directive('selectPanel', ['$parse', '$timeou
         }
 
         //获取所有列的数据
-        scope.getColumns = (function () {
-            // var columns = [];
-            // var lastCascade = scope.cascade;
-            // var lastData = [];
-            // var lastSelectedItems = [];
-            return function (cascade) {
-                let columns = [];
-                // if (lastCascade == scope.cascade
-                //     && lastData == scope.flatItems
-                //     && lastSelectedItems == scope.selectedItems) {
-                //     return columns;
-                // }
-                // lastCascade = cascade || scope.cascade;
-                // lastData = scope.flatItems;
-                // lastSelectedItems = scope.selectedItems;
-                columns.splice(0, columns.length);
-                if (!cascade) {
-                    //‘直接选择’模式，直接输出最后一级扁平化数据
-                    columns.push(scope.flatItems)
-                    return columns;
-                }
-                for (let i = 0; i < treeLength; i++) {
-                    columns.push(getItems(i));
-                }
+        scope.getColumns = function (cascade) {
+            let columns = [];
+            columns.splice(0, columns.length);
+            if (!cascade) {
+                //‘直接选择’模式，直接输出最后一级扁平化数据
+                columns.push(scope.flatItems)
                 return columns;
             }
-        }());
+            for (let i = 0; i < treeLength; i++) {
+                columns.push(getItems(i));
+            }
+            return columns;
+        };
 
         scope.$on('$destory', function () {
             //gc manually
