@@ -4,7 +4,7 @@ angular.module('ck.directives', []).directive('selectPanel', ['$parse', '$timeou
     templateUrl: 'select-panel/template.html',
     link: (scope, elements, attrs, ngModelCtrl) => {
         scope.directiveId = scope.$id;
-        scope.wrapperId = 'ck-select-panel'+ scope.$id;
+        scope.wrapperId = 'ck-select-panel' + scope.$id;
         //初始化显示类型: 级联|直接
         let cascadeAsDefault = attrs.cascade == 'true' ? true : false;
         scope.cascade = cascadeAsDefault || false;
@@ -123,7 +123,7 @@ angular.module('ck.directives', []).directive('selectPanel', ['$parse', '$timeou
                 let uls = document.getElementById(scope.wrapperId)
                     .getElementsByClassName('select-panel-list-wrapper')[0]
                     .getElementsByClassName('select-panel-list');
-                uls = Array.prototype.filter.call(uls, (ul)=> {
+                uls = Array.prototype.filter.call(uls, (ul) => {
                     return ul.className.indexOf('ng-hide') < 0;
                 });
                 Array.prototype.forEach.call(uls, (ul, index) => {
@@ -262,7 +262,6 @@ angular.module('ck.directives', []).directive('selectPanel', ['$parse', '$timeou
         }
     },
     scope: {
-        data: '=pickItemsFrom',
-        // arrayKeys: '@',//每一级的子节点数组字段名,从第二级开始制定，因为data[arrayKeys[0]]已经是默认第一级数组了
+        data: '=pickItemsFrom'
     }
 })]);
